@@ -1,0 +1,9 @@
+file_extensions:
+  -.jpg
+  -.png
+  -.gif
+  -.mp4
+  -.webm
+
+threads: 20
+update_rate: 1  # Update status board every 1 second

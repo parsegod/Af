@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch URL Content</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        input[type="text"], input[type="search"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px 0;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            white-space: pre-wrap; /* Preserve whitespace */
+            overflow-wrap: break-word; /* Break long words */
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            color: red;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+        }
+        .history {
+            margin-top: 20px;
+        }
+        .history-item {
+            cursor: pointer;
+            color: blue;
+            text-decoration: underline;
+        }
+        .history-item:hover {
+            text-decoration: none;
+        }
+        .theme-toggle {
+            margin: 10px 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Fetch URL Content</h1>
+    <input type="text" id="urlInput" placeholder="Enter URL here..." />
+    <button id="fetchButton">Fetch Content</button>
+    <button id="clearButton">Clear</button>
+    <div class="loading" id="loading">Loading...</div>
+    <input type="search" id="searchInput" placeholder="Search in content..." />
+    <button id="copyButton">Copy to Clipboard</button>
+    <button id="downloadButton">Download Content</button>
+    <div id="result" class="result"></div>
+    <div class="history" id="history"></div>
+    <button class="theme-toggle" id="themeToggle">Toggle Dark/Light Theme</button>
+</div>
+
+<script>
+    const fetchButton = document.getElementById('fetchButton');
+    const clearButton = document.getElementById('clearButton');
+    const urlInput = document.getElementById('urlInput');
+    const resultDiv = document.getElementById('result');
+    const loadingDiv = document.getElementById('loading');
+    const searchInput = document.getElementById('searchInput');
+    const copyButton = document.getElementById('copyButton');
+    const downloadButton = document.getElementById('downloadButton');
+    const historyDiv = document.getElementById('history const themeToggle = document.getElementById('themeToggle');
+    let history = [];
+
+    fetchButton.addEventListener('click', async () => {
+        const url = urlInput.value;
+        if (!isValidUrl(url)) {
+            alert('Please enter a valid URL');
+            return;
+        }
+        loadingDiv.style.display = 'block';
+        resultDiv.textContent = '';
+
+        try {
+            const response = await fetch(url);
+            const data = await response.text();
+            resultDiv.textContent = data;
+            history.push(url);
+            updateHistory();
+        } catch (error) {
+            resultDiv.textContent = 'Error fetching content';
+            console.error(error);
+        } finally {
+            loadingDiv.style.display = 'none';
+        }
+    });
+
+    clearButton.addEventListener('click', () => {
+        urlInput.value = '';
+        resultDiv.textContent = '';
+        searchInput.value = '';
+    });
+
+    searchInput.addEventListener('input', () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        const content = resultDiv.textContent.toLowerCase();
+        if (content.includes(searchTerm)) {
+            const highlightedContent = content.replace(new RegExp(searchTerm, 'g'), match => `<span style="background-color: yellow;">${match}</span>`);
+            resultDiv.innerHTML = highlightedContent;
+        } else {
+            resultDiv.textContent = content; // Reset if no match
+        }
+    });
+
+    copyButton.addEventListener('click', () => {
+        navigator.clipboard.writeText(resultDiv.textContent).then(() => {
+            alert('Content copied to clipboard');
+        });
+    });
+
+    downloadButton.addEventListener('click', () => {
+        const blob = new Blob([resultDiv.textContent], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'fetched_content.txt';
+        link.click();
+    });
+
+    themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-theme');
+    });
+
+    function isValidUrl(string) {
+        const res = string.match(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
+        return (res !== null);
+    }
+
+    function updateHistory() {
+        historyDiv.innerHTML = '';
+        history.forEach(url => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.textContent = url;
+            item.onclick = () => {
+                urlInput.value = url;
+                fetchButton.click();
+            };
+            historyDiv.appendChild(item);
+        });
+    }
+</script>
+</body>
+</html>
